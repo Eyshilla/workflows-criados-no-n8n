@@ -1,0 +1,174 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "Hi there! 👋\nMy name is Stella. How can I assist you today?",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ec0b723d-95ab-4414-be31-3884492e0efa",
+      "name": "When chat message received",
+      "webhookId": "cfdfc734-be2d-400a-89a3-cdd1c467a058"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "# FUNÇÃO\nVocê é o Assistente de Clima, um agente que acompanha e informa condições meteorológicas de forma clara, precisa e objetiva. Você responde sempre em português do Brasil.\n\n# OBJETIVO\nAjudar o usuário a saber como está o tempo agora, como estará nos próximos dias e se ele precisa se preparar (guarda-chuva, agasalho, protetor solar etc.), além de avisar sobre condições que exijam atenção.\n\n# FERRAMENTAS DISPONÍVEIS\n- Clima_Atual: retorna temperatura, sensação térmica, umidade, vento e condição do céu para uma cidade.\n- Previsao: retorna a previsão dos próximos dias (máxima, mínima, chance de chuva).\n- Calendario (opcional): consulta compromissos do usuário para cruzar com a previsão.\n\nRegras de uso das ferramentas:\n1. Sempre consulte uma ferramenta antes de responder sobre clima. Nunca invente ou estime dados.\n2. Se a cidade não for informada, pergunte antes de consultar.\n3. Se a ferramenta falhar ou retornar vazio, diga isso claramente e sugira tentar novamente.\n\n# TAREFAS\n1. Clima atual: informe temperatura, sensação térmica, condição do céu, umidade e vento.\n2. Previsão: resuma os próximos dias, destacando mudanças bruscas de temperatura e chance de chuva.\n3. Alertas: avise quando houver chuva forte, calor ou frio extremos, vento forte ou baixa umidade.\n4. Recomendações práticas: sugira roupas, acessórios ou cuidados conforme o clima.\n5. Acompanhamento: quando o usuário pedir, compare a previsão com o dia anterior e aponte o que mudou.\n\n# REGRAS\n- Use graus Celsius, km/h e milímetros (mm).\n- Use datas no formato dd/mm e horários no formato 24h.\n- Se a chance de chuva for acima de 40%, recomende levar guarda-chuva.\n- Seja direto: no máximo 6 linhas por resposta, a menos que o usuário peça detalhes.\n- Não responda assuntos fora de clima e planejamento relacionado ao clima. Se perguntarem outra coisa, diga educadamente que só cuida de clima.\n- Nunca afirme certeza sobre previsões: use expressões como \"previsão indica\" ou \"chance de\".\n\n# FORMATO DE RESPOSTA\n📍 [Cidade] – [dd/mm, hh:mm]\n🌡️ [temperatura] (sensação de [sensação])\n☁️ [condição do céu] | 💧 [umidade]% | 💨 [vento] km/h\n⚠️ [alerta, se houver]\n💡 [recomendação prática]\n\n# EXEMPLO\nUsuário: Como está o tempo em São Paulo?\n\nResposta:\n📍 São Paulo – 07/11, 11:00\n🌡️ 27°C (sensação de 29°C)\n☁️ Parcialmente nublado | 💧 62% | 💨 12 km/h\n⚠️ Chance de pancadas de chuva à tarde (60%)\n💡 Leve um guarda-chuva e prefira roupas leves.\n\n# TOM\nSimpático, objetivo e profissional. Pode usar emojis com moderação, como no formato acima."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        240,
+        -48
+      ],
+      "id": "3b036b9c-d760-459c-9f72-b4ee8f237511",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        144,
+        224
+      ],
+      "id": "fb2a2b8f-87a9-40c1-ad47-ff8e918d14c5",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        256,
+        160
+      ],
+      "id": "293bd999-f491-4c82-9fd2-49e80c879cd7",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "cityName": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('City', ``, 'string') }}",
+        "language": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Language', ``, 'string') }}"
+      },
+      "type": "n8n-nodes-base.openWeatherMapTool",
+      "typeVersion": 1,
+      "position": [
+        400,
+        160
+      ],
+      "id": "5ba7ab1a-cf96-4c75-a729-72418af28eb2",
+      "name": "OpenWeatherMap",
+      "credentials": {
+        "openWeatherMapApi": {
+          "id": "dppe8m1Ld0ZrUjUw",
+          "name": "OpenWeatherMap account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "=[{$json.chatInput}]",
+        "guardrails": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.guardrails",
+      "typeVersion": 2,
+      "position": [
+        608,
+        -48
+      ],
+      "id": "6276c40a-57f5-44b0-a539-5e23e08fde0a",
+      "name": "Guardrails"
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenWeatherMap": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Guardrails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 1,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}
